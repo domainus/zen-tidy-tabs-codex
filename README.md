@@ -50,6 +50,12 @@ Install like other Zen chrome mods / Sine / ATG mods by loading this folder or c
 - `userChrome.css`
 - `preferences.json`
 
+Because this mod uses a privileged `.uc.js` script, Sine must allow JS mods:
+
+```text
+sine.allow-unsafe-js = true
+```
+
 Advanced Tab Groups is recommended because this mod calls Zen/Firefox chrome tab-group APIs and uses optional ATG color helpers when available.
 
 ## Behavior

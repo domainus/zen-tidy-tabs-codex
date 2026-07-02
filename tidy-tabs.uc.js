@@ -1730,6 +1730,7 @@
     const { ungroupedTotal, ungroupedNonSelected, hasGroupedTabs } =
       countTabsForButtonVisibility();
     const separators = domCache.getSeparators();
+    ensureFloatingSortButton();
 
     batchDOMUpdates([
       () => {
@@ -1769,6 +1770,28 @@
       },
     ]);
   };
+
+  function ensureFloatingSortButton() {
+    // Fallback for Zen/Arc sidebar builds where the old pinned-tabs separator
+    // selector no longer exists or is hidden. Prefer the real separator button
+    // whenever it exists so we do not overlay web content.
+    if (document.querySelector("#sort-button")) {
+      document.getElementById("zen-tidy-tabs-floating-button")?.remove();
+      return;
+    }
+    if (document.getElementById("zen-tidy-tabs-floating-button")) return;
+    const button = document.createElement("button");
+    button.id = "zen-tidy-tabs-floating-button";
+    button.textContent = "🧹";
+    button.title = "Tidy tabs into groups";
+    button.setAttribute("aria-label", "Tidy tabs into groups");
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      sortTabsByTopic();
+    });
+    document.documentElement.appendChild(button);
+  }
 
   // --- Add Tab Event Listeners for Visibility Updates ---
   function addTabEventListeners() {
@@ -1856,7 +1879,6 @@
   function initializeScript() {
     const tryInitialize = () => {
       try {
-        const separatorExists = domCache.getSeparators().length > 0;
         const commandSetExists = !!domCache.getCommandSet();
         const gBrowserReady =
           typeof gBrowser !== "undefined" && gBrowser?.tabContainer;
@@ -1866,7 +1888,6 @@
         const ready =
           gBrowserReady &&
           commandSetExists &&
-          separatorExists &&
           gZenWorkspacesReady;
 
         if (ready) {
