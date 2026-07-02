@@ -952,3 +952,23 @@ tab-group.zen-tidy-custom-icon .tab-group-label-container,
     0 0 12px color-mix(in srgb, var(--zen-primary-color, #8aa4ff) 22%, transparent);
   vertical-align: -2px;
 }
+
+:root[zen-tidy-downloads-rename-only] [id*="dismissed"],
+:root[zen-tidy-downloads-rename-only] [class*="dismissed"],
+:root[zen-tidy-downloads-rename-only] [id*="pile"],
+:root[zen-tidy-downloads-rename-only] [class*="pile"],
+#main-window[zen-tidy-downloads-rename-only] [id*="dismissed"],
+#main-window[zen-tidy-downloads-rename-only] [class*="dismissed"],
+#main-window[zen-tidy-downloads-rename-only] [id*="pile"],
+#main-window[zen-tidy-downloads-rename-only] [class*="pile"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  max-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+}

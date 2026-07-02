@@ -29,6 +29,7 @@
   let isPlayingFailureAnimation = false;
   let sortAnimationId = null;
   let eventListenersAdded = false;
+  const topicEmojiMap = new Map();
 
   // DOM Cache for performance
   const domCache = {
@@ -415,12 +416,15 @@
     const jsonText = raw.startsWith("{") ? raw : raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1);
     const parsed = JSON.parse(jsonText);
     const pairs = [];
+    topicEmojiMap.clear();
     for (const group of parsed.groups || []) {
       const topic = String(group.topic || "Group").replace(/^['"`]+|['"`]+$/g, "").slice(0, 24) || "Group";
+      const emoji = String(group.emoji || "").trim().slice(0, 8);
+      if (emoji) topicEmojiMap.set(topic, emoji);
       const indexes = [...new Set(Array.isArray(group.indexes) ? group.indexes : [])];
       if (indexes.length < 2) continue;
       for (const index of indexes) {
-        if (tabs[index]?.isConnected) pairs.push({ tab: tabs[index], topic });
+        if (tabs[index]?.isConnected) pairs.push({ tab: tabs[index], topic, emoji });
       }
     }
     return pairs;
@@ -436,7 +440,8 @@
     const args = ["exec", "--skip-git-repo-check", "--sandbox", "read-only", "--color", "never", "--ephemeral"];
     if (model) args.push("--model", model);
     args.push("-");
-    const prompt = `Group these browser tabs like Arc Tidy Tabs. Create concise 1-3 word group names. Only use indexes provided. Omit single-tab groups unless they clearly match another tab. Return strict JSON only with this exact schema: {"groups":[{"topic":"Docs","indexes":[0,1]}]}\nTabs: ${JSON.stringify(codexPromptPayload(tabs))}`;
+    const emojiList = ["💻","📚","📰","🎬","🎵","🛒","💬","💰","🤖","✅","🎮","⬇️","📸","✈️","🍔","🏠","🔬","🎨","⚙️","🔐","❤️","⭐","📌","🧠","🧾","📅","📦","🔎"];
+    const prompt = `Group these browser tabs like Arc Tidy Tabs. Create concise 1-3 word group names. Also choose exactly one emoji from this allowed emoji list for each group: ${emojiList.join(" ")}. Only use indexes provided. Omit single-tab groups unless they clearly match another tab. Return strict JSON only with this exact schema: {"groups":[{"topic":"Docs","emoji":"📚","indexes":[0,1]}]}\nTabs: ${JSON.stringify(codexPromptPayload(tabs))}`;
     const proc = await Subprocess.call({ command: codexPath, arguments: args, stdin: "pipe", stdout: "pipe", stderr: "pipe" });
     await proc.stdin.write(prompt);
     await proc.stdin.close();
@@ -804,22 +809,24 @@
 
   const getArcFolderIconForTopic = (topic) => {
     const t = String(topic || "").toLowerCase();
-    if (/\b(code|coding|dev|developer|github|gitlab|program|api|docs?|documentation|terminal|cli|python|javascript|typescript|rust|swift)\b/.test(t)) return "⌘";
-    if (/\b(news|article|read|blog|press|hn|hacker|lobster|tech news)\b/.test(t)) return "◈";
-    if (/\b(video|youtube|stream|movie|media|twitch|music|audio|podcast)\b/.test(t)) return "▶";
-    if (/\b(shop|store|amazon|deal|cart|product|price|order)\b/.test(t)) return "◆";
-    if (/\b(mail|inbox|message|chat|slack|discord|social|twitter|x\.com|reddit)\b/.test(t)) return "✉";
-    if (/\b(bank|finance|money|invoice|receipt|tax|folio|budget|trading|stock|crypto)\b/.test(t)) return "$";
-    if (/\b(ai|llm|codex|claude|openai|agent|model|prompt)\b/.test(t)) return "✦";
-    if (/\b(work|project|task|todo|planning|calendar|meeting)\b/.test(t)) return "✓";
-    if (/\b(game|gaming|steam|epic|xbox|playstation)\b/.test(t)) return "♜";
-    if (/\b(download|file|pdf|image|photo|asset|archive|zip)\b/.test(t)) return "↓";
-    return "•";
+    if (/\b(code|coding|dev|developer|github|gitlab|program|api|docs?|documentation|terminal|cli|python|javascript|typescript|rust|swift)\b/.test(t)) return "💻";
+    if (/\b(news|article|read|blog|press|hn|hacker|lobster|tech news)\b/.test(t)) return "📰";
+    if (/\b(video|youtube|stream|movie|media|twitch)\b/.test(t)) return "🎬";
+    if (/\b(music|audio|podcast)\b/.test(t)) return "🎵";
+    if (/\b(shop|store|amazon|deal|cart|product|price|order)\b/.test(t)) return "🛒";
+    if (/\b(mail|inbox|message|chat|slack|discord|social|twitter|x\.com|reddit)\b/.test(t)) return "💬";
+    if (/\b(bank|finance|money|invoice|receipt|tax|folio|budget|trading|stock|crypto)\b/.test(t)) return "💰";
+    if (/\b(ai|llm|codex|claude|openai|agent|model|prompt)\b/.test(t)) return "🤖";
+    if (/\b(work|project|task|todo|planning|calendar|meeting)\b/.test(t)) return "✅";
+    if (/\b(game|gaming|steam|epic|xbox|playstation)\b/.test(t)) return "🎮";
+    if (/\b(download|file|pdf|image|photo|asset|archive|zip)\b/.test(t)) return "⬇️";
+    return "📌";
   };
 
   const applyArcFolderIcon = (groupElement, topic) => {
     if (!groupElement?.isConnected) return;
-    const icon = getArcFolderIconForTopic(topic || groupElement.getAttribute("label"));
+    const groupTopic = topic || groupElement.getAttribute("label");
+    const icon = topicEmojiMap.get(groupTopic) || getArcFolderIconForTopic(groupTopic);
     groupElement.setAttribute("data-zen-tidy-icon", icon);
     groupElement.classList.add("zen-tidy-custom-icon");
     const labelEl = groupElement.querySelector(".tab-group-label, .tab-group-label-container");

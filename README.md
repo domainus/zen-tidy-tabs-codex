@@ -80,7 +80,7 @@ Advanced Tab Groups is recommended because this mod calls Zen/Firefox chrome tab
 Tabs:
 
 - Only acts on the active Zen workspace.
-- Adds category glyphs to Tidy-created/touched folders based on group topic, such as code, news, media, shopping, finance, AI, games, downloads, and planning.
+- In Codex mode, asks the same AI response that determines tab groups to choose a folder emoji from a fixed allowed emoji list; non-Codex/fallback grouping uses the same emoji list heuristically.
 - Skips pinned, selected, empty, glance, and already-grouped tabs.
 - Shows the broom button when there are enough ungrouped tabs, or when groups already exist and there is at least one ungrouped tab.
 - Uses native `gBrowser.addTabGroup()` and `gBrowser.moveTabToExistingGroup()` rather than WebExtension tab groups.

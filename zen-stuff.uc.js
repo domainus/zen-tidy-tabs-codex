@@ -12,6 +12,13 @@
   // Wait for browser window to be ready
   if (location.href !== "chrome://browser/content/browser.xhtml") return;
 
+  try {
+    if (Services.prefs.getBoolPref("zen-tidy-tabs.downloads.showCustomUi", false) === false) {
+      console.log("Zen Stuff pile UI disabled by zen-tidy-tabs.downloads.showCustomUi=false");
+      return;
+    }
+  } catch (_e) {}
+
   const Utils = window.zenTidyDownloadsUtils;
   if (!Utils) {
     console.error("[Zen Stuff] zenTidyDownloadsUtils not loaded - ensure tidy-downloads-utils.uc.js loads first (check @loadOrder in headers)");
