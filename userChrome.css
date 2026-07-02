@@ -22,18 +22,20 @@
   -moz-context-properties: fill, fill-opacity !important;
   fill: currentColor !important;
   color: inherit !important;
-  opacity: 0.55;
+  opacity: 0.72;
   visibility: visible !important;
   pointer-events: auto !important;
-  min-width: 16px !important;
-  width: 16px !important;
-  height: 16px !important;
-  margin: 0 2px !important;
-  padding: 0 !important;
+  min-width: 22px !important;
+  width: 22px !important;
+  height: 22px !important;
+  margin: 0 8px 0 0 !important;
+  padding: 3px 5px !important;
   flex: 0 0 auto !important;
   overflow: visible !important;
   cursor: pointer !important;
+  border-radius: 6px !important;
 }
+
 
 .pinned-tabs-container-separator:hover #sort-button,
 #navigator-toolbox[zen-has-implicit-hover="true"] .pinned-tabs-container-separator #sort-button,
@@ -51,11 +53,12 @@
 }
 
 .pinned-tabs-container-separator #sort-button .broom-icon {
-  width: 12px !important;
-  height: 12px !important;
-  display: block !important;
+  width: 14px !important;
+  height: 14px !important;
+  display: inline-block !important;
   fill: currentColor !important;
   transition: transform 0.15s ease-in-out;
+  vertical-align: -1px;
 }
 
 .pinned-tabs-container-separator #sort-button .broom-icon path {
