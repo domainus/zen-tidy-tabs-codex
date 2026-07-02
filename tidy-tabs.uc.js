@@ -364,6 +364,15 @@
     }
   };
 
+  function setDebugPref(name, value) {
+    try {
+      Services.prefs.setStringPref(`zen-tidy-tabs.debug.${name}`, String(value));
+      Services.prefs.savePrefFile(null);
+    } catch (e) {
+      console.warn("[TabSort][Debug] Failed to save debug pref", name, e);
+    }
+  }
+
   function tidyPref(name, fallback = "") {
     try {
       switch (Services.prefs.getPrefType(name)) {
@@ -420,6 +429,8 @@
   async function askCodexForMultipleTopics(tabs) {
     const { Subprocess } = ChromeUtils.importESModule("resource://gre/modules/Subprocess.sys.mjs");
     const codexPath = tidyPref(CONFIG.PREF_CODEX_PATH, "/opt/homebrew/bin/codex");
+    setDebugPref("lastProvider", "codex");
+    setDebugPref("lastCodexStatus", `starting:${Date.now()}:${tabs.length}:${codexPath}`);
     const model = tidyPref(CONFIG.PREF_CODEX_MODEL, "");
     const timeoutSeconds = Math.max(15, Number(tidyPref(CONFIG.PREF_CODEX_TIMEOUT, 90)) || 90);
     const args = ["exec", "--skip-git-repo-check", "--sandbox", "read-only", "--color", "never", "--ephemeral"];
@@ -431,8 +442,13 @@
     await proc.stdin.close();
     const timeout = new Promise((_, reject) => setTimeout(() => { try { proc.kill(); } catch {} reject(new Error(`Codex CLI timed out after ${timeoutSeconds}s`)); }, timeoutSeconds * 1000));
     const [stdout, stderr, result] = await Promise.race([Promise.all([proc.stdout.readString(), proc.stderr.readString(), proc.wait()]), timeout]);
-    if (result.exitCode !== 0) throw new Error(`Codex CLI failed (${result.exitCode}): ${stderr || stdout}`);
-    return parseTopicJson(stdout, tabs);
+    if (result.exitCode !== 0) {
+      setDebugPref("lastCodexStatus", `failed:${Date.now()}:exit-${result.exitCode}:${String(stderr || stdout).slice(0, 200)}`);
+      throw new Error(`Codex CLI failed (${result.exitCode}): ${stderr || stdout}`);
+    }
+    const pairs = parseTopicJson(stdout, tabs);
+    setDebugPref("lastCodexStatus", `success:${Date.now()}:pairs-${pairs.length}:stdout-${String(stdout).slice(0, 120)}`);
+    return pairs;
   }
 
   const askAIForMultipleTopics = async (tabs) => {
@@ -441,14 +457,19 @@
     const validTabs = tabs.filter((tab) => tab?.isConnected);
     if (!validTabs.length) return [];
 
-    if (tidyPref(CONFIG.PREF_PROVIDER, "local") === "codex") {
+    const provider = tidyPref(CONFIG.PREF_PROVIDER, "local");
+    setDebugPref("lastProviderRequested", provider);
+    if (provider === "codex") {
       try {
         const codexPairs = await askCodexForMultipleTopics(validTabs);
         if (codexPairs.length) return codexPairs;
+        setDebugPref("lastCodexStatus", `empty:${Date.now()}:falling-back`);
       } catch (e) {
+        setDebugPref("lastCodexStatus", `exception:${Date.now()}:${String(e?.message || e).slice(0, 220)}`);
         console.error("[TabSort][Codex] Falling back to local AI after Codex failure:", e);
       }
     }
+    setDebugPref("lastProvider", "local-ai");
 
     const currentWorkspaceId = window.gZenWorkspaces?.activeWorkspace;
     const result = [];
