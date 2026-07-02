@@ -6,7 +6,8 @@ This is **not** a normal WebExtension. It is a Zen/Sine/ATG-style chrome mod wit
 
 - `theme.json` mod manifest
 - `tidy-tabs.uc.js` privileged browser chrome script
-- `userChrome.css` button/animation styling
+- `tidy-downloads.uc.js` plus vendored `modules/tidy-downloads/` and `modules/zen-stuff/` from [`Vertex-Mods/Zen-Tidy-Downloads`](https://github.com/Vertex-Mods/Zen-Tidy-Downloads)
+- `userChrome.css` button/animation styling, including vendored Tidy Downloads chrome styles
 - `preferences.json` Zen mod preferences
 
 ## Providers
@@ -24,7 +25,7 @@ Codex prefs:
 - `zen-tidy-tabs.codex.model`, optional model override
 - `zen-tidy-tabs.codex.timeoutSeconds`, default `90`
 
-Codex mode assumes `codex` is installed and already logged in on the same machine/profile user. It invokes:
+Codex mode assumes `codex` is installed and already logged in on the same machine/profile user. The tab-tidying feature and the vendored Tidy Downloads AI rename flow both use the same Codex prefs when `zen-tidy-tabs.provider` is `codex`. It invokes:
 
 ```text
 codex exec --skip-git-repo-check --sandbox read-only --color never --ephemeral -
@@ -39,6 +40,12 @@ zen-tidy-tabs.debug.lastCodexStatus
 ```
 
 `lastCodexStatus` starts with `starting`, `success`, `failed`, `exception`, or `empty`.
+
+Tidy Downloads Codex rename status is stored separately in:
+
+```text
+zen-tidy-tabs.debug.downloads.lastStatus
+```
 
 OpenAI-compatible prefs:
 
@@ -70,10 +77,18 @@ Advanced Tab Groups is recommended because this mod calls Zen/Firefox chrome tab
 
 ## Behavior
 
+Tabs:
+
 - Only acts on the active Zen workspace.
 - Skips pinned, selected, empty, glance, and already-grouped tabs.
 - Shows the broom button when there are enough ungrouped tabs, or when groups already exist and there is at least one ungrouped tab.
 - Uses native `gBrowser.addTabGroup()` and `gBrowser.moveTabToExistingGroup()` rather than WebExtension tab groups.
+
+Downloads:
+
+- Vendors the Zen Tidy Downloads UI/pod/tooltip/download listener behavior.
+- Keeps upstream Mistral preferences for users who want that provider.
+- When `zen-tidy-tabs.provider` is `codex`, download AI rename suggestions use the installed Codex CLI instead of Mistral.
 
 ## Safety / privacy
 
