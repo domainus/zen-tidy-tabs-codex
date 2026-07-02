@@ -148,6 +148,36 @@
         return cleaned || null;
       }
 
+      async function readDownloadContentSummary(downloadPath, fileExtension, contentType) {
+        const textLikeExtensions = new Set([
+          ".txt", ".md", ".markdown", ".csv", ".tsv", ".json", ".jsonl", ".xml", ".html", ".htm",
+          ".css", ".js", ".mjs", ".ts", ".tsx", ".jsx", ".py", ".rb", ".go", ".rs", ".java",
+          ".c", ".cpp", ".h", ".hpp", ".swift", ".kt", ".sh", ".zsh", ".fish", ".ps1", ".yaml", ".yml", ".toml", ".ini", ".log"
+        ]);
+        const lowerContentType = String(contentType || "").toLowerCase();
+        const looksText = textLikeExtensions.has(String(fileExtension || "").toLowerCase()) || lowerContentType.startsWith("text/") || /json|xml|javascript|typescript|csv|yaml/.test(lowerContentType);
+        const maxBytes = Math.max(1024, Math.min(Number(getCodexPref("zen-tidy-tabs.downloads.contentMaxBytes", 12000)) || 12000, 50000));
+        const fileKindHint = lowerContentType || (fileExtension ? `${fileExtension} file` : "unknown file type");
+
+        if (!looksText) {
+          return `File content: not embedded because this appears to be ${fileKindHint}. Local path for content-aware providers that can inspect files: ${downloadPath}`;
+        }
+
+        try {
+          if (typeof IOUtils === "undefined") {
+            return `File content: unavailable because IOUtils is not available. Local path: ${downloadPath}`;
+          }
+          const bytes = await IOUtils.read(downloadPath, { maxBytes });
+          let text = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+          text = text.replace(/\u0000/g, "").replace(/[\t ]+/g, " ").replace(/\r\n/g, "\n").trim();
+          if (text.length > maxBytes) text = `${text.slice(0, maxBytes)}\n...[truncated]`;
+          if (!text) return `File content: empty or unreadable text file. Local path: ${downloadPath}`;
+          return `File content preview (${Math.min(bytes.length, maxBytes)} bytes max, use this as the primary signal for renaming):\n${text}`;
+        } catch (error) {
+          return `File content: failed to read text preview (${String(error?.message || error).slice(0, 160)}). Local path: ${downloadPath}`;
+        }
+      }
+
       async function callCodexAI({ systemPrompt, userPrompt, abortSignal }) {
         if (abortSignal?.aborted) return null;
         const codexPath = getCodexPref("zen-tidy-tabs.codex.path", "/opt/homebrew/bin/codex");
@@ -641,16 +671,24 @@ Some examples, in the form "original name, tab title, domain -> new name"
             }
           }
 
+          const contentType = getContentTypeFromFilename(currentFilename);
+          const fileContentSummary = await readDownloadContentSummary(downloadPath, fileExtension, contentType);
+          setCodexDebugPref("lastContentStatus", `${Date.now()}:${currentFilename}:${fileContentSummary.slice(0, 180)}`);
+
           const userContent = `Original filename: '${currentFilename}'
 Source domain: '${domain}'
 Source tab title: '${tabTitle}'
 Page Header: '${pageHeader}'
 Page Description: '${pageDescription}'
+Content type: '${contentType}'
+${fileContentSummary}
 
 Instructions:
-1. First, check if the "Original filename" is already descriptive (contains real words, e.g., "viper-gaming-valorant-hd..."). If so, prioritize cleaning it up (remove random strings, IDs, dates) rather than rewriting it completely from the context.
-2. ONLY if the "Original filename" is meaningless gibberish (e.g., "wp13801370.jpg", "OIP.jpg", "image.png"), rename it based on the "Source tab title" or "Page Header".
-3. Return ONLY the new filename.`;
+1. Rename based primarily on the downloaded file's actual contents when a content preview is available. This should mimic Arc Tidy Downloads: the file should be named for what it contains, not just where it came from.
+2. Use the source tab title, page header, and domain only as supporting context or when the file contents are unavailable/unreadable.
+3. Keep informative original names mostly the same, but clean casing, separators, random IDs, duplicate counters, and overly long dates.
+4. If the original name is meaningless (for example "download", "image", "untitled", "OIP", random IDs), choose a concise content-derived name.
+5. Return ONLY the new filename.`;
 
           const provider = getCodexPref("zen-tidy-tabs.provider", "local");
           const suggestedName = provider === "codex"

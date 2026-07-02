@@ -114,6 +114,12 @@
     "defaultValue": true
   },
   {
+    "property": "zen-tidy-tabs.downloads.contentMaxBytes",
+    "type": "string",
+    "label": "Max text bytes to inspect for content-based download names",
+    "defaultValue": "12000"
+  },
+  {
     "type": "separator",
     "label": "Debugging"
   },

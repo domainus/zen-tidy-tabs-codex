@@ -89,6 +89,8 @@ Downloads:
 - Vendors the Zen Tidy Downloads UI/pod/tooltip/download listener behavior.
 - Keeps upstream Mistral preferences for users who want that provider.
 - When `zen-tidy-tabs.provider` is `codex`, download AI rename suggestions use the installed Codex CLI instead of Mistral.
+- For text-like downloads (`.txt`, `.md`, `.csv`, `.json`, source code, logs, HTML/XML/YAML, etc.), reads a bounded content preview and asks the model to name the file primarily from the actual contents, mimicking Arc's content-aware tidy downloads behavior.
+- `zen-tidy-tabs.downloads.contentMaxBytes` controls the maximum text bytes included in the rename prompt, default `12000`.
 
 ## Safety / privacy
 
