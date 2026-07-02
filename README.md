@@ -30,6 +30,16 @@ Codex mode assumes `codex` is installed and already logged in on the same machin
 codex exec --skip-git-repo-check --sandbox read-only --color never --ephemeral -
 ```
 
+For debugging, the mod writes these prefs after each tidy attempt:
+
+```text
+zen-tidy-tabs.debug.lastProviderRequested
+zen-tidy-tabs.debug.lastProvider
+zen-tidy-tabs.debug.lastCodexStatus
+```
+
+`lastCodexStatus` starts with `starting`, `success`, `failed`, `exception`, or `empty`.
+
 OpenAI-compatible prefs:
 
 - `zen-tidy-tabs.openai.baseUrl`, default `https://api.openai.com/v1`
