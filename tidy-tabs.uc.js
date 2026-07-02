@@ -8,7 +8,7 @@
   const CONFIG = {
     SIMILARITY_THRESHOLD: 0.45,
     GROUP_SIMILARITY_THRESHOLD: 0.65, // Lowered from 0.75 to be more inclusive for existing groups
-    MIN_TABS_FOR_SORT: 6, // This is the ammount of tabs for the button to show, not the ammount of tabs you need in a group
+    MIN_TABS_FOR_SORT: 2, // Show the broom as soon as there is something useful to sort.
     DEBOUNCE_DELAY: 250,
     ANIMATION_DURATION: 800,
     MAX_INIT_CHECKS: 50,
@@ -1372,29 +1372,9 @@
       return;
     }
     try {
-      // --- Create and Insert SVG with SINGLE Path ---
-      if (!separator.querySelector("svg.separator-line-svg")) {
-        const svgNS = "http://www.w3.org/2000/svg";
-        const svg = document.createElementNS(svgNS, "svg");
-        svg.setAttribute("class", "separator-line-svg");
-        svg.setAttribute("viewBox", "0 0 100 2");
-        svg.setAttribute("preserveAspectRatio", "none");
-
-        // Create ONE path
-        const path = document.createElementNS(svgNS, "path");
-        path.setAttribute("id", `separator-path`); // Single ID
-        path.setAttribute("class", "separator-path-segment"); // Keep common class
-        path.setAttribute("d", "M 0 1 L 100 1"); // Initial straight line
-        path.style.fill = "none";
-        path.style.opacity = "1"; // Ensure it's visible
-        path.setAttribute("stroke-width", "1"); // Added: Set initial stroke width
-        path.setAttribute("stroke-linecap", "round"); // Added: Make path ends round
-        svg.appendChild(path);
-
-        separator.insertBefore(svg, separator.firstChild);
-      } else {
-      }
-      // --- End SVG ---
+      // Keep Zen's native separator line intact. Earlier versions inserted a
+      // replacement SVG line here, but that is fragile with Arc/compact sidebar
+      // themes and can make the clear/broom row look broken.
 
       // --- Create and Append Sort Button (positioned before native clear button) ---
       if (!separator.querySelector("#sort-button")) {
