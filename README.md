@@ -1,6 +1,6 @@
-# Zen Tidy Tabs OpenAI
+# Zen Tidy Tabs Codex
 
-A Zen Browser mod in the same style as [`Vertex-Mods/Zen-Tidy-Tabs`](https://github.com/Vertex-Mods/Zen-Tidy-Tabs): it injects a broom button into Zen's pinned-tabs separator, classifies ungrouped tabs, creates native Zen tab groups, and moves matching tabs into those groups.
+A Zen Browser mod in the same style as [`Vertex-Mods/Zen-Tidy-Tabs`](https://github.com/Vertex-Mods/Zen-Tidy-Tabs): it injects a broom button into Zen's pinned-tabs separator, classifies ungrouped tabs with Codex CLI/local AI/OpenAI-compatible APIs/heuristics, creates native Zen tab groups, and moves matching tabs into those groups.
 
 This is **not** a normal WebExtension. It is a Zen/Sine/ATG-style chrome mod with:
 
