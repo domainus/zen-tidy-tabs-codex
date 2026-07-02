@@ -114,6 +114,12 @@
     "defaultValue": true
   },
   {
+    "property": "zen-tidy-tabs.downloads.showCustomUi",
+    "type": "checkbox",
+    "label": "Show custom Tidy Downloads UI/pods (disable to keep only smart file renaming)",
+    "defaultValue": false
+  },
+  {
     "type": "dropdown",
     "label": "Tidy Downloads rename provider",
     "property": "zen-tidy-tabs.downloads.provider",

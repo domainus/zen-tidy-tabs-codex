@@ -21,6 +21,32 @@
     }
   }
 
+  function getTidyDownloadsBoolPref(name, fallback) {
+    try {
+      if (Services.prefs.getPrefType(name) === Services.prefs.PREF_BOOL) {
+        return Services.prefs.getBoolPref(name, fallback);
+      }
+    } catch (_e) {}
+    return fallback;
+  }
+
+  function syncTidyDownloadsUiPref() {
+    const enabled = getTidyDownloadsBoolPref("zen-tidy-tabs.downloads.showCustomUi", false);
+    document.documentElement.toggleAttribute("zen-tidy-downloads-custom-ui", enabled);
+    document.documentElement.toggleAttribute("zen-tidy-downloads-rename-only", !enabled);
+    document.getElementById("main-window")?.toggleAttribute("zen-tidy-downloads-custom-ui", enabled);
+    document.getElementById("main-window")?.toggleAttribute("zen-tidy-downloads-rename-only", !enabled);
+    setTidyDownloadsDebugPref("customUi", enabled ? "enabled" : "rename-only");
+  }
+
+  syncTidyDownloadsUiPref();
+  try {
+    Services.prefs.addObserver("zen-tidy-tabs.downloads.showCustomUi", syncTidyDownloadsUiPref);
+    window.addEventListener("unload", () => {
+      try { Services.prefs.removeObserver("zen-tidy-tabs.downloads.showCustomUi", syncTidyDownloadsUiPref); } catch (_e) {}
+    }, { once: true });
+  } catch (_e) {}
+
   // Wait for browser window to be ready
   if (location.href !== "chrome://browser/content/browser.xhtml") return;
   setTidyDownloadsDebugPref("bootstrap", `loaded:${Date.now()}`);
@@ -45,6 +71,7 @@
       return;
     }
 
+    syncTidyDownloadsUiPref();
     setTidyDownloadsDebugPref("bootstrap", `main-window:${Date.now()}`);
     console.log('Zen Tidy Downloads: Main browser checks passed, proceeding with initialization');
 

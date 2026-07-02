@@ -802,8 +802,42 @@
     }
   };
 
+  const getArcFolderIconForTopic = (topic) => {
+    const t = String(topic || "").toLowerCase();
+    if (/\b(code|coding|dev|developer|github|gitlab|program|api|docs?|documentation|terminal|cli|python|javascript|typescript|rust|swift)\b/.test(t)) return "⌘";
+    if (/\b(news|article|read|blog|press|hn|hacker|lobster|tech news)\b/.test(t)) return "◈";
+    if (/\b(video|youtube|stream|movie|media|twitch|music|audio|podcast)\b/.test(t)) return "▶";
+    if (/\b(shop|store|amazon|deal|cart|product|price|order)\b/.test(t)) return "◆";
+    if (/\b(mail|inbox|message|chat|slack|discord|social|twitter|x\.com|reddit)\b/.test(t)) return "✉";
+    if (/\b(bank|finance|money|invoice|receipt|tax|folio|budget|trading|stock|crypto)\b/.test(t)) return "$";
+    if (/\b(ai|llm|codex|claude|openai|agent|model|prompt)\b/.test(t)) return "✦";
+    if (/\b(work|project|task|todo|planning|calendar|meeting)\b/.test(t)) return "✓";
+    if (/\b(game|gaming|steam|epic|xbox|playstation)\b/.test(t)) return "♜";
+    if (/\b(download|file|pdf|image|photo|asset|archive|zip)\b/.test(t)) return "↓";
+    return "•";
+  };
+
+  const applyArcFolderIcon = (groupElement, topic) => {
+    if (!groupElement?.isConnected) return;
+    const icon = getArcFolderIconForTopic(topic || groupElement.getAttribute("label"));
+    groupElement.setAttribute("data-zen-tidy-icon", icon);
+    groupElement.classList.add("zen-tidy-custom-icon");
+    const labelEl = groupElement.querySelector(".tab-group-label, .tab-group-label-container");
+    if (labelEl && !labelEl.querySelector?.(":scope > .zen-tidy-folder-icon")) {
+      const iconEl = document.createElement("span");
+      iconEl.className = "zen-tidy-folder-icon";
+      iconEl.textContent = icon;
+      iconEl.setAttribute("aria-hidden", "true");
+      labelEl.prepend(iconEl);
+    } else {
+      const iconEl = labelEl?.querySelector?.(":scope > .zen-tidy-folder-icon");
+      if (iconEl) iconEl.textContent = icon;
+    }
+  };
+
   const playArcGroupFlourish = (groupElement) => {
     if (!groupElement?.isConnected) return;
+    applyArcFolderIcon(groupElement);
     groupElement.classList.remove("zen-tidy-arc-created", "zen-tidy-arc-settled");
     // Force style recalc so repeat tidy runs replay the animation.
     groupElement.getBoundingClientRect?.();
@@ -1163,6 +1197,7 @@
               }
             }
             if (movedAnyTabIntoExistingGroup) {
+              applyArcFolderIcon(existingGroupElement, topic);
               playArcGroupFlourish(existingGroupElement);
             }
           } catch (e) {
@@ -1193,6 +1228,7 @@
               );
               if (newGroup && newGroup.isConnected) {
                 existingGroupElementsMap.set(topic, newGroup);
+                applyArcFolderIcon(newGroup, topic);
                 playArcGroupFlourish(newGroup);
 
                 // Try to set group color to average favicon if advanced-tab-groups is available
@@ -1214,6 +1250,7 @@
                 );
                 if (newGroupElFallback && newGroupElFallback.isConnected) {
                   existingGroupElementsMap.set(topic, newGroupElFallback);
+                  applyArcFolderIcon(newGroupElFallback, topic);
                   playArcGroupFlourish(newGroupElFallback);
 
                   // Try to set group color to average favicon if advanced-tab-groups is available

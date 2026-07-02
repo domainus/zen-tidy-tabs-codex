@@ -80,6 +80,7 @@ Advanced Tab Groups is recommended because this mod calls Zen/Firefox chrome tab
 Tabs:
 
 - Only acts on the active Zen workspace.
+- Adds category glyphs to Tidy-created/touched folders based on group topic, such as code, news, media, shopping, finance, AI, games, downloads, and planning.
 - Skips pinned, selected, empty, glance, and already-grouped tabs.
 - Shows the broom button when there are enough ungrouped tabs, or when groups already exist and there is at least one ungrouped tab.
 - Uses native `gBrowser.addTabGroup()` and `gBrowser.moveTabToExistingGroup()` rather than WebExtension tab groups.
@@ -89,6 +90,7 @@ Downloads:
 - Vendors the Zen Tidy Downloads UI/pod/tooltip/download listener behavior.
 - Keeps upstream Mistral preferences for users who want that provider.
 - Download AI rename suggestions use `zen-tidy-tabs.downloads.provider`, default `codex`. `codex` uses the installed Codex CLI; `mistral` uses the upstream Mistral API prefs.
+- `zen-tidy-tabs.downloads.showCustomUi` controls whether the custom Tidy Downloads pods/pile/toasts are visible. It defaults to `false`, so the mod keeps smart renaming while hiding the custom download UI.
 - For text-like downloads (`.txt`, `.md`, `.csv`, `.json`, source code, logs, HTML/XML/YAML, etc.), reads a bounded content preview and asks the model to name the file primarily from the actual contents, mimicking Arc's content-aware tidy downloads behavior.
 - `zen-tidy-tabs.downloads.contentMaxBytes` controls the maximum text bytes included in the rename prompt, default `12000`.
 - Debug prefs under `zen-tidy-tabs.debug.downloads.*` record bootstrap/module readiness, enqueue attempts, provider, content preview status, and final rename status.

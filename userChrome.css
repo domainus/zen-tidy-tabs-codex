@@ -868,3 +868,87 @@ arrowscrollbox.workspace-arrowscrollbox::after {
     transition: none !important;
   }
 }
+
+/* Rename-only mode for Tidy Downloads: keep listeners/AI renaming active but hide custom pods/tooltips. */
+:root[zen-tidy-downloads-rename-only] #userchrome-download-pods-shell,
+:root[zen-tidy-downloads-rename-only] #userchrome-download-cards-container,
+:root[zen-tidy-downloads-rename-only] #zen-dismissed-pile-dynamic-sizer,
+:root[zen-tidy-downloads-rename-only] .dismissed-pod-row,
+:root[zen-tidy-downloads-rename-only] .dismissed-pod,
+:root[zen-tidy-downloads-rename-only] .zen-downloads-pile,
+:root[zen-tidy-downloads-rename-only] .zen-toast,
+#main-window[zen-tidy-downloads-rename-only] #userchrome-download-pods-shell,
+#main-window[zen-tidy-downloads-rename-only] #userchrome-download-cards-container,
+#main-window[zen-tidy-downloads-rename-only] #zen-dismissed-pile-dynamic-sizer,
+#main-window[zen-tidy-downloads-rename-only] .dismissed-pod-row,
+#main-window[zen-tidy-downloads-rename-only] .dismissed-pod,
+#main-window[zen-tidy-downloads-rename-only] .zen-downloads-pile,
+#main-window[zen-tidy-downloads-rename-only] .zen-toast {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Arc-like category glyphs for groups created/touched by Tidy Tabs. */
+tab-group.zen-tidy-custom-icon,
+.tab-group.zen-tidy-custom-icon {
+  --zen-tidy-folder-glyph: attr(data-zen-tidy-icon);
+}
+
+tab-group.zen-tidy-custom-icon .tab-group-label::before,
+.tab-group.zen-tidy-custom-icon .tab-group-label::before,
+tab-group.zen-tidy-custom-icon .tab-group-label-container::before,
+.tab-group.zen-tidy-custom-icon .tab-group-label-container::before {
+  content: attr(data-zen-tidy-icon);
+}
+
+/* attr() on descendants cannot read ancestor attrs in Gecko, so inject via a group pseudo-element too. */
+tab-group.zen-tidy-custom-icon::before,
+.tab-group.zen-tidy-custom-icon::before {
+  content: attr(data-zen-tidy-icon);
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  z-index: 2;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  color: color-mix(in srgb, white 92%, var(--zen-primary-color, #8aa4ff) 8%);
+  background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.24), transparent 46%),
+    color-mix(in srgb, var(--zen-primary-color, #8aa4ff) 62%, black 38%);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.16),
+    0 0 12px color-mix(in srgb, var(--zen-primary-color, #8aa4ff) 22%, transparent);
+  pointer-events: none;
+}
+
+/* Make room for the custom glyph without touching Zen's native group mechanics. */
+tab-group.zen-tidy-custom-icon .tab-group-label,
+.tab-group.zen-tidy-custom-icon .tab-group-label,
+tab-group.zen-tidy-custom-icon .tab-group-label-container,
+.tab-group.zen-tidy-custom-icon .tab-group-label-container {
+  padding-left: 28px !important;
+}
+
+.zen-tidy-folder-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  margin-right: 7px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  color: color-mix(in srgb, white 92%, var(--zen-primary-color, #8aa4ff) 8%);
+  background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.24), transparent 46%),
+    color-mix(in srgb, var(--zen-primary-color, #8aa4ff) 62%, black 38%);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.16),
+    0 0 12px color-mix(in srgb, var(--zen-primary-color, #8aa4ff) 22%, transparent);
+  vertical-align: -2px;
+}
