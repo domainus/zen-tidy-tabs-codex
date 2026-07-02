@@ -463,7 +463,8 @@
       try {
         const codexPairs = await askCodexForMultipleTopics(validTabs);
         if (codexPairs.length) return codexPairs;
-        setDebugPref("lastCodexStatus", `empty:${Date.now()}:falling-back`);
+        // askCodexForMultipleTopics already saved success:pairs-0 with a stdout sample.
+        // Keep that more useful diagnostic instead of replacing it with a generic empty status.
       } catch (e) {
         setDebugPref("lastCodexStatus", `exception:${Date.now()}:${String(e?.message || e).slice(0, 220)}`);
         console.error("[TabSort][Codex] Falling back to local AI after Codex failure:", e);
