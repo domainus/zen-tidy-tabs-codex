@@ -690,7 +690,8 @@ Instructions:
 4. If the original name is meaningless (for example "download", "image", "untitled", "OIP", random IDs), choose a concise content-derived name.
 5. Return ONLY the new filename.`;
 
-          const provider = getCodexPref("zen-tidy-tabs.provider", "local");
+          const provider = getCodexPref("zen-tidy-tabs.downloads.provider", getCodexPref("zen-tidy-tabs.provider", "codex"));
+          setCodexDebugPref("lastProvider", provider);
           const suggestedName = provider === "codex"
             ? await callCodexAI({
                 systemPrompt,

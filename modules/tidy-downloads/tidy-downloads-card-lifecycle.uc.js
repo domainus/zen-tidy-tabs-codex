@@ -243,14 +243,50 @@
        * Enqueue AI rename from lifecycle (not pod renderer). Idempotent with queue dedupe.
        * @param {string} downloadKey
        */
-      function maybeEnqueueAIRename(downloadKey) {
+      function setDownloadsDebugPref(name, value) {
+        try {
+          Services.prefs.setStringPref(`zen-tidy-tabs.debug.downloads.${name}`, String(value));
+          Services.prefs.savePrefFile(null);
+        } catch (_e) {}
+      }
+
+      function maybeEnqueueAIRename(downloadKey, attempt = 0) {
+        setDownloadsDebugPref("lastEnqueueAttempt", `${Date.now()}:${downloadKey}:attempt-${attempt}`);
         const cardData = activeDownloadCards.get(downloadKey);
-        if (!cardData?.download?.succeeded || !cardData.download.target?.path) return;
-        if (!getPref("extensions.downloads.enable_ai_renaming", true)) return;
-        if (typeof getAiRenamingPossible === "function" && !getAiRenamingPossible()) return;
-        if (renamedFiles.has(cardData.download.target.path)) return;
+        if (!cardData?.download?.succeeded) {
+          setDownloadsDebugPref("lastEnqueueResult", `${Date.now()}:not-succeeded:${downloadKey}`);
+          return;
+        }
+        if (!cardData.download.target?.path) {
+          if (attempt < 12) {
+            setTimeout(() => maybeEnqueueAIRename(downloadKey, attempt + 1), 250);
+          } else {
+            setDownloadsDebugPref("lastEnqueueResult", `${Date.now()}:missing-path:${downloadKey}`);
+            debugLog(`[Lifecycle] AI rename skipped after waiting for target.path: ${downloadKey}`);
+          }
+          return;
+        }
+        if (cardData.aiRenameEnqueued) {
+          setDownloadsDebugPref("lastEnqueueResult", `${Date.now()}:already-enqueued:${downloadKey}`);
+          return;
+        }
+        if (!getPref("extensions.downloads.enable_ai_renaming", true)) {
+          setDownloadsDebugPref("lastEnqueueResult", `${Date.now()}:disabled:${downloadKey}`);
+          return;
+        }
+        if (typeof getAiRenamingPossible === "function" && !getAiRenamingPossible()) {
+          setDownloadsDebugPref("lastEnqueueResult", `${Date.now()}:ai-not-possible:${downloadKey}`);
+          return;
+        }
+        if (renamedFiles.has(cardData.download.target.path)) {
+          setDownloadsDebugPref("lastEnqueueResult", `${Date.now()}:already-renamed:${downloadKey}`);
+          return;
+        }
         const fn = typeof getAddToAIRenameQueue === "function" ? getAddToAIRenameQueue() : null;
-        if (typeof fn !== "function") return;
+        if (typeof fn !== "function") {
+          setDownloadsDebugPref("lastEnqueueResult", `${Date.now()}:missing-queue-fn:${downloadKey}`);
+          return;
+        }
         // Pre-arm AI-pending key BEFORE enqueueing so a fast AI completion's
         // releasePileHoverExpandBlockForKey runs against an existing entry.
         // Otherwise add() in makePodStickyCore could lose the race and leave
@@ -259,6 +295,10 @@
           store.pileHoverExpandBlockedUntilAIDoneKeys?.add(downloadKey);
           cardData.suppressToolbarPodForAIRename = true;
           const ok = fn(downloadKey, cardData.download, cardData.originalFilename);
+          if (ok !== false) {
+            cardData.aiRenameEnqueued = true;
+            setDownloadsDebugPref("lastEnqueueResult", `${Date.now()}:queued:${downloadKey}`);
+          }
           if (ok === false) {
             store.pileHoverExpandBlockedUntilAIDoneKeys?.delete(downloadKey);
             cardData.suppressToolbarPodForAIRename = false;

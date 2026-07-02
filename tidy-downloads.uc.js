@@ -12,8 +12,18 @@
   // Use Components for Firefox compatibility
   const { classes: Cc, interfaces: Ci } = Components;
 
+  function setTidyDownloadsDebugPref(name, value) {
+    try {
+      Services.prefs.setStringPref(`zen-tidy-tabs.debug.downloads.${name}`, String(value));
+      Services.prefs.savePrefFile(null);
+    } catch (e) {
+      console.warn("[Tidy Downloads] Failed to save debug pref", name, e);
+    }
+  }
+
   // Wait for browser window to be ready
   if (location.href !== "chrome://browser/content/browser.xhtml") return;
+  setTidyDownloadsDebugPref("bootstrap", `loaded:${Date.now()}`);
 
   // === POPUP WINDOW EXCLUSION CHECKS ===
   // Method 1: Check window type attribute
@@ -22,54 +32,21 @@
     return;
   }
 
-  // Method 2: Check if this is a popup by examining window features
-  try {
-    // Check if window has minimal UI (characteristic of popups)
-    if (window.toolbar && !window.toolbar.visible) {
-      console.log('Zen Tidy Downloads: Skipping - appears to be a popup (toolbar check)');
-      return;
-    }
-    
-    // Check window opener (popups usually have an opener)
-    if (window.opener) {
-      console.log('Zen Tidy Downloads: Skipping - window has opener (popup check)');
-      return;
-    }
-  } catch (e) {
-    // If we can't check these properties, continue but log it
-    console.log('Zen Tidy Downloads: Could not check window properties:', e);
-  }
-
-  // Method 3: Check for essential browser UI elements that should exist in main window
-  // Wait a bit for DOM to be ready, then check for main browser elements
+  // Keep popup exclusion conservative. Zen's main browser chrome can hide toolbars,
+  // omit #sidebar-box, or report unusual window features depending on mods/layout;
+  // requiring those caused the downloads module to silently never initialize.
   setTimeout(() => {
-    const mainBrowserElements = [
-      '#navigator-toolbox',  // Main toolbar container
-      '#browser',            // Browser element
-      '#sidebar-box'         // Sidebar container
-    ];
-    
-    const missingElements = mainBrowserElements.filter(selector => !document.querySelector(selector));
-    
-    if (missingElements.length > 0) {
-      console.log('Zen Tidy Downloads: Skipping - missing main browser elements:', missingElements);
-      return;
-    }
-    
-    // Method 4: Check window size (popups are usually smaller)
-    if (window.outerWidth < 400 || window.outerHeight < 300) {
-      console.log('Zen Tidy Downloads: Skipping - window too small (likely popup)');
-      return;
-    }
-    
-    // Method 5: Check for dialog-specific attributes
     if (document.documentElement.hasAttribute('dlgtype')) {
       console.log('Zen Tidy Downloads: Skipping - dialog window detected');
       return;
     }
-    
-    // If all checks pass, continue with initialization
-    console.log('Zen Tidy Downloads: All popup exclusion checks passed, proceeding with initialization');
+    if (!document.querySelector('#navigator-toolbox') || !document.querySelector('#browser')) {
+      console.log('Zen Tidy Downloads: Skipping - missing core browser chrome');
+      return;
+    }
+
+    setTidyDownloadsDebugPref("bootstrap", `main-window:${Date.now()}`);
+    console.log('Zen Tidy Downloads: Main browser checks passed, proceeding with initialization');
 
     // Single-flight: duplicate script evaluation would register listeners twice. Only arm after
     // we know this is the real browser chrome (popup checks above).
@@ -103,6 +80,7 @@
     (function tryInit(attempt) {
       const missing = REQUIRED_MODULES.filter((m) => !m.test()).map((m) => m.name);
       if (missing.length === 0) {
+        setTidyDownloadsDebugPref("modules", `ready:${Date.now()}`);
         initializeMainScript();
         return;
       }
@@ -110,6 +88,7 @@
         setTimeout(() => tryInit(attempt + 1), 50);
         return;
       }
+      setTidyDownloadsDebugPref("modules", `missing:${Date.now()}:${missing.join(",")}`);
       console.error(
         `[Tidy Downloads] Missing modules after 2s: ${missing.join(", ")}. Verify theme load order: tidy-downloads modules before tidy-downloads.uc.js.`
       );
@@ -126,6 +105,7 @@
       return;
     }
     window.__zenTidyDownloadsMainInitialized = true;
+    setTidyDownloadsDebugPref("main", `initialized:${Date.now()}`);
     const {
       getPref,
       SecurityUtils,
@@ -475,6 +455,7 @@
               debugLog("Downloads API verified");
               aiRenamingPossible = true; // Local AI is assumed to be available
               debugLog("AI renaming enabled - using Local AI");
+              setTidyDownloadsDebugPref("main", `downloads-api-ready:${Date.now()}`);
               await initDownloadManager();
               initSidebarWidthSyncFn();
               debugLog("Initialization complete");

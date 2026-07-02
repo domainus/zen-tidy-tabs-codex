@@ -114,6 +114,22 @@
     "defaultValue": true
   },
   {
+    "type": "dropdown",
+    "label": "Tidy Downloads rename provider",
+    "property": "zen-tidy-tabs.downloads.provider",
+    "defaultValue": "codex",
+    "options": [
+      {
+        "label": "Codex CLI (content-aware)",
+        "value": "codex"
+      },
+      {
+        "label": "Mistral API (upstream)",
+        "value": "mistral"
+      }
+    ]
+  },
+  {
     "property": "zen-tidy-tabs.downloads.contentMaxBytes",
     "type": "string",
     "label": "Max text bytes to inspect for content-based download names",
