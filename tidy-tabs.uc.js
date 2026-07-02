@@ -802,6 +802,20 @@
     }
   };
 
+  const playArcGroupFlourish = (groupElement) => {
+    if (!groupElement?.isConnected) return;
+    groupElement.classList.remove("zen-tidy-arc-created", "zen-tidy-arc-settled");
+    // Force style recalc so repeat tidy runs replay the animation.
+    groupElement.getBoundingClientRect?.();
+    groupElement.classList.add("zen-tidy-arc-created");
+    setTimeout(() => {
+      if (!groupElement.isConnected) return;
+      groupElement.classList.remove("zen-tidy-arc-created");
+      groupElement.classList.add("zen-tidy-arc-settled");
+      setTimeout(() => groupElement?.classList?.remove("zen-tidy-arc-settled"), 1800);
+    }, 1200);
+  };
+
   // Spiky failure animation utility
   const startFailureAnimation = () => {
     if (sortAnimationId !== null) {
@@ -1131,6 +1145,7 @@
                 groupLabelElement.setAttribute("aria-expanded", "true");
               }
             }
+            let movedAnyTabIntoExistingGroup = false;
             for (const tab of tabsForThisTopic) {
               const groupParent = tab.closest("tab-group");
               const isInGroupInCorrectWorkspace = groupParent
@@ -1138,6 +1153,7 @@
                 : false;
               if (tab && tab.isConnected && !isInGroupInCorrectWorkspace) {
                 gBrowser.moveTabToExistingGroup(tab, existingGroupElement);
+                movedAnyTabIntoExistingGroup = true;
               } else {
                 console.warn(
                   ` -> Tab "${
@@ -1145,6 +1161,9 @@
                   }" skipped moving to "${topic}" (already grouped or invalid).`
                 );
               }
+            }
+            if (movedAnyTabIntoExistingGroup) {
+              playArcGroupFlourish(existingGroupElement);
             }
           } catch (e) {
             console.error(
@@ -1174,6 +1193,7 @@
               );
               if (newGroup && newGroup.isConnected) {
                 existingGroupElementsMap.set(topic, newGroup);
+                playArcGroupFlourish(newGroup);
 
                 // Try to set group color to average favicon if advanced-tab-groups is available
                 try {
@@ -1194,6 +1214,7 @@
                 );
                 if (newGroupElFallback && newGroupElFallback.isConnected) {
                   existingGroupElementsMap.set(topic, newGroupElFallback);
+                  playArcGroupFlourish(newGroupElFallback);
 
                   // Try to set group color to average favicon if advanced-tab-groups is available
                   try {
