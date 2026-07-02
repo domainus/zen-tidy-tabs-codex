@@ -418,7 +418,7 @@
     const pairs = [];
     topicEmojiMap.clear();
     for (const group of parsed.groups || []) {
-      const topic = String(group.topic || "Group").replace(/^['"`]+|['"`]+$/g, "").slice(0, 24) || "Group";
+        const topic = stripLeadingTopicEmoji(String(group.topic || "Group").replace(/^['"`]+|['"`]+$/g, "")).slice(0, 24) || "Group";
       const emoji = String(group.emoji || "").trim().slice(0, 8);
       if (emoji) topicEmojiMap.set(topic, emoji);
       const indexes = [...new Set(Array.isArray(group.indexes) ? group.indexes : [])];
@@ -823,23 +823,33 @@
     return "📌";
   };
 
+  const stripLeadingTopicEmoji = (label) => String(label || "").replace(/^(?:[\p{Emoji_Presentation}\p{Extended_Pictographic}]|[0-9#*]\ufe0f?\u20e3|\p{Emoji}\ufe0f)\s+/u, "").trim();
+
   const applyArcFolderIcon = (groupElement, topic) => {
     if (!groupElement?.isConnected) return;
-    const groupTopic = topic || groupElement.getAttribute("label");
-    const icon = topicEmojiMap.get(groupTopic) || getArcFolderIconForTopic(groupTopic);
+    const rawLabel = groupElement.getAttribute("label") || "";
+    const cleanLabel = stripLeadingTopicEmoji(topic || rawLabel);
+    const icon = topicEmojiMap.get(cleanLabel) || topicEmojiMap.get(topic) || getArcFolderIconForTopic(cleanLabel);
     groupElement.setAttribute("data-zen-tidy-icon", icon);
     groupElement.classList.add("zen-tidy-custom-icon");
-    const labelEl = groupElement.querySelector(".tab-group-label, .tab-group-label-container");
-    if (labelEl && !labelEl.querySelector?.(":scope > .zen-tidy-folder-icon")) {
-      const iconEl = document.createElement("span");
-      iconEl.className = "zen-tidy-folder-icon";
-      iconEl.textContent = icon;
-      iconEl.setAttribute("aria-hidden", "true");
-      labelEl.prepend(iconEl);
-    } else {
-      const iconEl = labelEl?.querySelector?.(":scope > .zen-tidy-folder-icon");
-      if (iconEl) iconEl.textContent = icon;
+    // Zen's native folder icon/label structure varies across versions/themes. Prefixing
+    // the native group label is the most reliable way to make the category icon visible.
+    const displayLabel = `${icon} ${cleanLabel || "Group"}`;
+    if (rawLabel !== displayLabel) groupElement.setAttribute("label", displayLabel);
+    const labelEl = groupElement.querySelector(".tab-group-label, .tab-group-label-container, [class*='label']");
+    if (labelEl && labelEl.childElementCount === 0 && labelEl.textContent?.trim() !== displayLabel) {
+      labelEl.textContent = displayLabel;
     }
+  };
+
+  const applyArcFolderIconsToExistingGroups = () => {
+    try {
+      document.querySelectorAll("tab-group[label]").forEach((groupElement) => {
+        if (!groupElement.classList?.contains("zen-tidy-custom-icon")) {
+          applyArcFolderIcon(groupElement, groupElement.getAttribute("label"));
+        }
+      });
+    } catch (_e) {}
   };
 
   const playArcGroupFlourish = (groupElement) => {
@@ -1982,6 +1992,9 @@
           addSortButtonToAllSeparators();
           setupgZenWorkspacesHooks();
           patchClearButtonToPreserveGroups(); // Patch the clear button
+          applyArcFolderIconsToExistingGroups();
+          setTimeout(applyArcFolderIconsToExistingGroups, 500);
+          setTimeout(applyArcFolderIconsToExistingGroups, 1500);
           updateButtonsVisibilityState();
           addTabEventListeners();
 

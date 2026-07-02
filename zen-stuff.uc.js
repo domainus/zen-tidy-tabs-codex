@@ -14,6 +14,29 @@
 
   try {
     if (Services.prefs.getBoolPref("zen-tidy-tabs.downloads.showCustomUi", false) === false) {
+      for (const selector of [
+        "#zen-dismissed-pile-dynamic-sizer",
+        "#zen-dismissed-pile-hover-bridge",
+        "#zen-dismissed-pile-container",
+        ".zen-dismissed-pile",
+        ".dismissed-pod-row"
+      ]) {
+        document.querySelectorAll(selector).forEach((el) => el.remove());
+      }
+      // Clear persisted pile pods so a future restart doesn't reserve space before CSS applies.
+      setTimeout(async () => {
+        try {
+          if (window.SessionStore?.promiseInitialized) await window.SessionStore.promiseInitialized;
+          const keysJson = window.SessionStore?.getCustomWindowValue?.(window, "zen-stuff-pod-keys");
+          const keys = keysJson ? JSON.parse(keysJson) : [];
+          if (Array.isArray(keys)) {
+            for (const key of keys) {
+              try { window.SessionStore.deleteCustomWindowValue(window, `zen-stuff-pod-${key}`); } catch (_e) {}
+            }
+          }
+          try { window.SessionStore?.deleteCustomWindowValue?.(window, "zen-stuff-pod-keys"); } catch (_e) {}
+        } catch (_e) {}
+      }, 1000);
       console.log("Zen Stuff pile UI disabled by zen-tidy-tabs.downloads.showCustomUi=false");
       return;
     }
