@@ -508,7 +508,8 @@
     // Download manager UI and listeners
     async function initDownloadManager() {
       await new Promise((resolve) => setTimeout(resolve, 300));
-      debugLog("Creating download manager UI elements...");
+      const showCustomDownloadsUi = getPref("zen-tidy-tabs.downloads.showCustomUi", false);
+      debugLog(showCustomDownloadsUi ? "Creating download manager UI elements..." : "Initializing rename-only download manager...");
 
       function prepareMasterCloseHandoffToSuccessor(successorKey) {
         if (!successorKey || !activeDownloadCards.has(successorKey)) return;
@@ -607,7 +608,7 @@
         });
         throttledCreateOrUpdateCard = podsApi.throttledCreateOrUpdateCard;
 
-        if (window.zenTidyDownloadsLibraryPie?.createController) {
+        if (showCustomDownloadsUi && window.zenTidyDownloadsLibraryPie?.createController) {
           libraryPieController = window.zenTidyDownloadsLibraryPie.createController({
             getPref,
             debugLog,
@@ -616,13 +617,19 @@
             getPodsRowContainer: () => podsRowContainerElement,
             updateDownloadCardsVisibility
           });
+        } else {
+          libraryPieController = null;
+          document.getElementById("zen-tidy-download-pie-host")?.remove();
         }
 
-        if (window.zenTidyDownloadsPodHandoff?.createHandoffAnimator) {
+        if (showCustomDownloadsUi && window.zenTidyDownloadsPodHandoff?.createHandoffAnimator) {
           podHandoffAnimator = window.zenTidyDownloadsPodHandoff.createHandoffAnimator({
             getPref,
             debugLog
           });
+        } else {
+          podHandoffAnimator = null;
+          document.querySelectorAll(".zen-tidy-pod-handoff-ghost, .zen-download-arc-animation").forEach((el) => el.remove());
         }
 
         Object.assign(window.zenTidyDownloads, {
