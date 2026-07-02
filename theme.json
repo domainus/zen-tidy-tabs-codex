@@ -1,0 +1,30 @@
+{
+  "id": "zen-tidy-tabs-openai",
+  "name": "Zen Tidy Tabs OpenAI",
+  "description": "Arc-like tidy tabs for Zen: adds a broom button that uses local Firefox AI or an OpenAI-compatible API to create Zen tab groups.",
+  "scripts": {
+    "tidy-tabs.uc.js": {
+      "include": ["chrome://browser/content/browser.xhtml"]
+    }
+  },
+  "homepage": "https://github.com/ryan/zen-tidy-tabs-openai",
+  "style": {
+    "chrome": "userChrome.css"
+  },
+  "preferences": "preferences.json",
+  "readme": "README.md",
+  "author": "Ryan + Pi",
+  "version": "0.1.0",
+  "tags": [
+    "Zen Browser",
+    "Vertical Tabs",
+    "Tab Groups",
+    "Tab Sorting",
+    "AI",
+    "OpenAI",
+    "Local"
+  ],
+  "modules": ["Vertex-Mods/Advanced-Tab-Groups"],
+  "ai": "yes",
+  "fork": ["zen"]
+}

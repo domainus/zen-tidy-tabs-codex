@@ -1,0 +1,63 @@
+[
+  {
+    "type": "checkbox",
+    "label": "Enable Firefox local AI",
+    "property": "browser.ml.enabled",
+    "force": true,
+    "defaultValue": true
+  },
+  {
+    "type": "dropdown",
+    "label": "Tidy provider",
+    "property": "zen-tidy-tabs.provider",
+    "defaultValue": "local",
+    "options": [
+      { "label": "Firefox local AI", "value": "local" },
+      { "label": "Codex CLI (installed + logged in)", "value": "codex" },
+      { "label": "OpenAI-compatible API", "value": "openai" },
+      { "label": "Heuristics only", "value": "heuristic" }
+    ]
+  },
+  {
+    "type": "string",
+    "label": "OpenAI-compatible base URL",
+    "property": "zen-tidy-tabs.openai.baseUrl",
+    "defaultValue": "https://api.openai.com/v1"
+  },
+  {
+    "type": "string",
+    "label": "OpenAI-compatible model",
+    "property": "zen-tidy-tabs.openai.model",
+    "defaultValue": "gpt-4.1-mini"
+  },
+  {
+    "type": "string",
+    "label": "OpenAI-compatible API key",
+    "property": "zen-tidy-tabs.openai.apiKey",
+    "defaultValue": ""
+  },
+  {
+    "type": "checkbox",
+    "label": "Send URL paths to remote APIs / Codex CLI (hostnames are always included)",
+    "property": "zen-tidy-tabs.openai.sendPaths",
+    "defaultValue": false
+  },
+  {
+    "type": "string",
+    "label": "Codex CLI path",
+    "property": "zen-tidy-tabs.codex.path",
+    "defaultValue": "/opt/homebrew/bin/codex"
+  },
+  {
+    "type": "string",
+    "label": "Codex model override (optional)",
+    "property": "zen-tidy-tabs.codex.model",
+    "defaultValue": ""
+  },
+  {
+    "type": "string",
+    "label": "Codex timeout seconds",
+    "property": "zen-tidy-tabs.codex.timeoutSeconds",
+    "defaultValue": "90"
+  }
+]
